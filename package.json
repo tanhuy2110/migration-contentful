@@ -1,0 +1,21 @@
+{
+  "name": "liku",
+  "version": "1.0.0",
+  "description": "Migartion wordpress to contentful",
+  "main": "index.js",
+  "scripts": {
+    "test": "node migration.js"
+  },
+  "keywords": [
+    "wp"
+  ],
+  "author": "Liku",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "contentful-management": "^7.14.0",
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "turndown": "^7.0.0"
+  }
+}
