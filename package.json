@@ -4,7 +4,7 @@
   "description": "Migartion wordpress to contentful",
   "main": "index.js",
   "scripts": {
-    "test": "node migration.js"
+    "start": "node migration.js"
   },
   "keywords": [
     "wp"

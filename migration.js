@@ -1,7 +1,7 @@
-const contentful = require('contentful-management')
-const axios = require('axios')
+const contentful = require('contentful-management');
+const axios = require('axios');
 const fs = require('fs');
-const TurndownService = require('turndown')
+const TurndownService = require('turndown');
 
 /**
  * Global variables that we're going use throughout this script
@@ -94,12 +94,12 @@ turndownService.addRule('replaceWordPressImages', {
 	filter: ['img'],
 	replacement: function(content, node, options) {
 		let assetUrl = contentfulData.assets.filter(asset => {
-		let assertFileName = asset.split('/').pop()
-		let nodeFileName = node.getAttribute('src').split('/').pop()
+			let assertFileName = asset.split('/').pop()
+			let nodeFileName = node.getAttribute('src').split('/').pop()
 
-		if (assertFileName === nodeFileName) {
-			return asset
-		}
+			if (assertFileName === nodeFileName) {
+				return asset
+			}
 		})[0];
 
 		return `![${node.getAttribute('alt')}](${assetUrl})`
@@ -118,16 +118,14 @@ function migrateContent() {
     console.log(`Getting WordPress API data`)
     console.log(logSeparator)
 
-    // Loop over our content types and create API endpoint URLs
     for (const [key, value] of Object.entries(wpData)) {
-        let wpUrl = `${wpEndpoint}${key}?per_page=100`
+        let wpUrl = `${wpEndpoint}${key}?per_page=1`
         promises.push(wpUrl)
     }
 
     getAllData(promises)
         .then(response =>{
-			apiData = response
-
+			apiData = response;
 			mapData();
         }).catch(error => {
         	console.log(error)
@@ -142,11 +140,11 @@ function fetchData(URL) {
 	return axios
 		.get(URL)
 		.then(function(response) {
-		return {
-			success: true,
-			endpoint: '',
-			data: response.data
-		};
+			return {
+				success: true,
+				endpoint: '',
+				data: response.data
+			};
 		})
 		.catch(function(error) {
 			return { success: false };
@@ -168,7 +166,7 @@ function mapData() {
 	let apiPosts = getApiDataType('posts')[0];
 	// Loop over posts - note: we probably /should/ be using .map() here.
 	for (let [key, postData] of Object.entries(apiPosts.data)) {
-		console.log(`Parsing ${postData.slug}`)
+		console.log(`Parsing: ${postData.slug}`)
 		/**
 		 * Create base object with only limited keys
 		 * (e.g. just 'slug', 'categories', 'title') etc.
@@ -177,7 +175,8 @@ function mapData() {
 		 * and the value be the WP post value. We will later match the keys
 		 * used here to their Contentful fields in the API.
 		 */
-		let fieldData = {
+		let fieldData = 
+		{
 			id: postData.id,
 			type: postData.type,
 			postTitle: postData.title.rendered,
@@ -189,8 +188,7 @@ function mapData() {
 			categories: getPostLabels(postData.categories, 'categories'),
 			contentImages: getPostBodyImages(postData)
 		}
-
-		wpData.posts.push(fieldData)
+		wpData.posts.push(fieldData);
 	}
 
 	console.log(`...Done!`)
@@ -208,9 +206,9 @@ function getPostBodyImages(postData) {
 	if (postData.featured_media > 0) {
 		let mediaData = getApiDataType(`media`)[0];
 		let mediaObj = mediaData.data.filter(obj => {
-		if (obj.id === postData.featured_media) {
-			return obj
-		}
+			if (obj.id === postData.featured_media) {
+				return obj
+			}
 		})[0];
 		bodyImages.push({
 			link: mediaObj.source_url,
@@ -223,16 +221,13 @@ function getPostBodyImages(postData) {
 	}
 
 	while (foundImage = imageRegex.exec(postData.content.rendered)) {
-		let alt = postData.id
-		if (foundImage[0].includes('alt="')) {
-			alt = foundImage[0].split('alt="')[1].split('"')[0] || ''
-		}
+		let loc_arr = foundImage[0].split('src="')[1].split('"')[0].split("/");
 		bodyImages.push({
 			link: foundImage[1],
-			description: alt,
-			title: alt,
+			description: loc_arr[loc_arr.length - 1],
+			title: loc_arr[loc_arr.length - 1],
 			postId: postData.id,
-			featured: false
+			featured: true
 		})
 	}
 	return bodyImages
@@ -262,7 +257,7 @@ function getPostLabels(postItems, labelType) {
 function getApiDataType(resourceName) {
 	let apiType = apiData.filter(obj => {
 		if (obj.endpoint === resourceName) {
-		return obj
+			return obj
 		}
 	});
 	return apiType
@@ -313,21 +308,22 @@ function buildContentfulAssets(environment) {
 	// For every image in every post, create a new asset.
 	for (let [index, wpPost] of wpData.posts.entries()) {
 		for (const [imgIndex, contentImage] of wpPost.contentImages.entries()) {
-			let assetObj = {
-								title: {
-									'en-US': contentImage.title
-								},
-								description: {
-									'en-US': contentImage.description
-								},
-								file: {
-									'en-US': {
-										contentType: 'image/jpeg',
-										fileName: contentImage.link.split('/').pop(),
-										upload: encodeURI(contentImage.link)
-									}
-								}
-							}
+			let assetObj = 
+			{
+				title: {
+					'en-US': contentImage.title
+				},
+				description: {
+					'en-US': contentImage.description
+				},
+				file: {
+					'en-US': {
+						contentType: 'image/jpeg',
+						fileName: contentImage.link.split('/').pop(),
+						upload: encodeURI(contentImage.link)
+					}
+				}
+			}
 			assetPromises.push(assetObj);
 		}
 	}
@@ -345,37 +341,6 @@ function buildContentfulAssets(environment) {
 		})
 }
 
-/**
- * Fetch all published assets from Contentful and store in a variable.
- * @param {String} environment - name of Contentful Environment.
- * @param {Array} assets - Array to store assets in.
- */
-function getAndStoreAssets(environment, assets) {
-	console.log(`Storing asset URLs in a global array to use later`)
-	// Not supported with JS? Easier to get all assets and support
-	// https://www.contentful.com/developers/docs/references/content-management-api/#/reference/assets/published-assets-collection
-	axios.get(`https://api.contentful.com/spaces/${ctfData.spaceId}/environments/${ctfData.environment}/public/assets`,
-	{
-		headers: {
-			'Authorization':`Bearer ${ctfData.accessToken}`
-		}
-	})
-	.then((result) => {
-		// console.log(result)
-		contentfulData.assets = []
-		for (const item of result.data.items) {
-			contentfulData.assets.push(item.fields.file['en-US'].url)
-		}
-
-		createContentfulPosts(environment, assets)
-
-	}).catch((err) => {
-		console.log(err)
-		return error
-	});
-	console.log(`...Done! getAndStoreAssets`)
-	console.log(logSeparator)
-}
 
 /**
  * Create a Promise to publish all assets.
@@ -388,7 +353,7 @@ function getAndStoreAssets(environment, assets) {
 function createContentfulAssets(environment, promises, assets) {
 	return Promise.all(
 		promises.map((asset, index) => new Promise(async resolve => {
-			let newAsset
+			let newAsset;
 			setTimeout(() => {
 				try {
 					newAsset = environment.createAsset({
@@ -413,6 +378,39 @@ function createContentfulAssets(environment, promises, assets) {
 	);
 }
 
+
+/**
+ * Fetch all published assets from Contentful and store in a variable.
+ * @param {String} environment - name of Contentful Environment.
+ * @param {Array} assets - Array to store assets in.
+ */
+function getAndStoreAssets(environment, assets) {
+	console.log(`Storing asset URLs in a global array to use later`)
+	// https://www.contentful.com/developers/docs/references/content-management-api/#/reference/assets/published-assets-collection/get-all-published-assets-of-a-space/console/js
+	axios.get(`https://api.contentful.com/spaces/${ctfData.spaceId}/environments/${ctfData.environment}/public/assets`,
+	{
+		headers: {
+			'Authorization':`Bearer ${ctfData.accessToken}`
+		}
+	})
+	.then((result) => {
+		// console.log(result.data.items);
+		contentfulData.assets = []
+		for (const item of result.data.items) {
+			contentfulData.assets.push(item.fields.file['en-US'].url)
+		}
+
+		createContentfulPosts(environment, assets)
+
+	}).catch((err) => {
+		console.log(err)
+		return error
+	});
+	console.log(`...Done! getAndStoreAssets`)
+	console.log(logSeparator)
+}
+
+
 /**
  * For each WordPress post, build the data for a Contentful counterpart.
  * @param {String} environment - Name of Contentful Environment.
@@ -421,7 +419,7 @@ function createContentfulAssets(environment, promises, assets) {
 function createContentfulPosts(environment, assets) {
 	console.log(`Creating Contentful Posts...`)
 	console.log(logSeparator)
-
+	console.log(assets);
 	// let postFields = {}
 	/**
 	 * Dynamically build our Contentful data object
@@ -507,14 +505,19 @@ function createContentfulPosts(environment, assets) {
 function createContentfulEntries(environment, promises) {
 	return Promise.all(promises.map((post, index) => new Promise(async resolve => {
 
-		let newPost
-
+		let newPost;
+		console.log('Possttttt', post);
 		console.log(`Attempting: ${post.slug['en-US']}`)
-
+		// console.log('postsssss', post);
 		setTimeout(() => {
 			try {
 				newPost = environment.createEntry('blogPost', {
-					fields: post
+					// fields: post
+					fields: {
+						title: {
+							'en-US': 'Entry title'
+						}
+					}
 				})
 				.then((entry) => entry.publish())
 				.then((entry) => {
@@ -614,4 +617,4 @@ function formatRichTextPost(content) {
   return markdown
 }
 // console.log(ctfClient);
-// migrateContent();
+migrateContent();
