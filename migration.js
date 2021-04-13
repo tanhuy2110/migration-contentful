@@ -2,7 +2,13 @@ const contentful = require('contentful-management');
 const axios = require('axios');
 const fs = require('fs');
 const TurndownService = require('turndown');
-
+require('dotenv').config();
+const {
+	WORDPRESS_API_URL,
+	CONTENT_DELIVERY_API,
+	CONTENTFUL_SPACE_ID,
+	CONTENTFUL_ENVIRONMENT_NAME,
+} = process.env;
 /**
  * Global variables that we're going use throughout this script
  * -----------------------------------------------------------------------------
@@ -11,7 +17,6 @@ const TurndownService = require('turndown');
 /**
  * Main WordPress endpoint.
  */
-const wpEndpoint = `https://adelabelin.com/wp-json/wp/v2/`
 
 /**
  * API Endpoints that we'd like to receive data from
@@ -27,18 +32,12 @@ let wpData = {
 /**
  * Contentful API requirements
  */
-const ctfData = {
-	accessToken: 'CFPAT-SSE-MsBy4fXMMuCCH-Gaz1kYGSkoDzdFv1BRgQrXS_4',
-	environment: 'master-2021-04-09',
-	spaceId: 's1rw45l2y55r'
-}
-Object.freeze(ctfData);
 
 /**
  * Creation of Contentful Client
  */
 const ctfClient = contentful.createClient({
-  	accessToken: ctfData.accessToken
+  	accessToken: CONTENT_DELIVERY_API
 })
 
 /**
@@ -119,7 +118,7 @@ function migrateContent() {
     console.log(logSeparator)
 
     for (const [key, value] of Object.entries(wpData)) {
-        let wpUrl = `${wpEndpoint}${key}?per_page=1`
+        let wpUrl = `${WORDPRESS_API_URL}${key}?per_page=1`
         promises.push(wpUrl)
     }
 
@@ -285,8 +284,8 @@ function writeDataToFile(dataTree, dataType) {
  * Create Contentful Client.
  */
 function createForContentful() {
-	ctfClient.getSpace(ctfData.spaceId)
-	.then((space) => space.getEnvironment(ctfData.environment))
+	ctfClient.getSpace(CONTENTFUL_SPACE_ID)
+	.then((space) => space.getEnvironment(CONTENTFUL_ENVIRONMENT_NAME))
 	.then((environment) => {
 		buildContentfulAssets(environment);
 	})
@@ -387,10 +386,10 @@ function createContentfulAssets(environment, promises, assets) {
 function getAndStoreAssets(environment, assets) {
 	console.log(`Storing asset URLs in a global array to use later`)
 	// https://www.contentful.com/developers/docs/references/content-management-api/#/reference/assets/published-assets-collection/get-all-published-assets-of-a-space/console/js
-	axios.get(`https://api.contentful.com/spaces/${ctfData.spaceId}/environments/${ctfData.environment}/public/assets`,
+	axios.get(`https://api.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/environments/${CONTENTFUL_ENVIRONMENT_NAME}/public/assets`,
 	{
 		headers: {
-			'Authorization':`Bearer ${ctfData.accessToken}`
+			'Authorization':`Bearer ${CONTENT_DELIVERY_API}`
 		}
 	})
 	.then((result) => {
@@ -419,7 +418,7 @@ function getAndStoreAssets(environment, assets) {
 function createContentfulPosts(environment, assets) {
 	console.log(`Creating Contentful Posts...`)
 	console.log(logSeparator)
-	console.log(assets);
+	console.log('assets--------------------0000000', assets);
 	// let postFields = {}
 	/**
 	 * Dynamically build our Contentful data object
@@ -506,7 +505,6 @@ function createContentfulEntries(environment, promises) {
 	return Promise.all(promises.map((post, index) => new Promise(async resolve => {
 
 		let newPost;
-		console.log('Possttttt', post);
 		console.log(`Attempting: ${post.slug['en-US']}`)
 		// console.log('postsssss', post);
 		setTimeout(() => {
