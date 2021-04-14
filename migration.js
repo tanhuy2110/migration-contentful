@@ -494,6 +494,53 @@ function createContentfulPosts(environment, assets) {
 // 			console.log(logSeparator);
 // 		});
 }
+/**
+ * Migration Content Type
+ */
+const fieldContentType = [
+	{
+		id: 'postTitle',
+		name: 'Post Title',
+		required: true,
+		localized: false,
+		type: 'Text',
+		disabled: false,
+		omitted: false
+	},
+	{
+		id: 'slug',
+		name: 'Slug',
+		required: true,
+		localized: false,
+		type: 'Text',
+		disabled: false,
+		omitted: false
+	},
+	{
+		id: 'content',
+		name: 'Content',
+		required: true,
+		localized: false,
+		type: 'Symbol',
+		disabled: false,
+		omitted: false
+	},
+	{
+		id: "publishDate",
+		name: "Publish Date",
+		type: "Date",
+		localized: false,
+		required: true,
+		validations: [],
+		disabled: false,
+		omitted: false
+	},
+	{
+		id: "tags",
+		type: "Array",
+		items: { "type": "Symbol" }
+	}
+]
 
 /**
  * 
@@ -504,21 +551,13 @@ function createContentType(environment) {
 	let contentType = environment.createContentTypeWithId('blogPost', {
 		name: 'Blog Post',
 		displayField: 'title',
-		fields: [
-			{
-				id: 'title',
-				name: 'Title',
-				required: true,
-				localized: false,
-				type: 'Text'
-			}
-		]
+		fields: fieldContentType
 	})
 	.then((contentType) => {
 		contentType.publish()
         .then(contentType => {
             console.log(contentType)
-            createContentfulEntries(environment)
+            // createContentfulEntries(environment)
         })
 	})
 	// .then((contentType) => console.log(contentType))
