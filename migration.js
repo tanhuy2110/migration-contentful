@@ -178,7 +178,7 @@ function mapData() {
 		{
 			id: postData.id,
 			type: postData.type,
-			postTitle: postData.title.rendered,
+			title: postData.title.rendered,
 			slug: postData.slug,
 			content: postData.content.rendered,
 			publishDate: postData.date_gmt + '+00:00',
@@ -435,7 +435,6 @@ function createContentfulPosts(environment, assets) {
 		let postFields = {}
 
 		for (let [postKey, postValue] of Object.entries(post)) {
-		// console.log(`postKey: ${postValue}`)
 			if (postKey === 'content') {
 				postValue = turndownService.turndown(postValue)
 			}
@@ -478,141 +477,133 @@ function createContentfulPosts(environment, assets) {
 			if (postKey === 'featuredImage' && postValue === 0) {
 				delete postFields.featuredImage
 			}
+
+			if (postKey === 'categories') {
+				postFields.categories = {
+					'en-US': {
+						sys: {
+							type: 'Link',
+							linkType: 'Entry',
+							id: 'blogging'
+						}
+					}
+				}
+			}
 		}
-		console.log('postFields-----------000000000', postFields);
+		console.log('postFields-----------000000000', postFields.categories);
 		promises.push(postFields)
+		console.log('promises-----------000000000', promises);
 	}
 
 	console.log(`Post objects created, attempting to create entries...`)
-	createContentType(environment);
-	// createContentfulEntries(environment, promises);
-// 		.then((result) => {
-// 			console.log(logSeparator);
-// 			console.log(`Done!`);
-// 			console.log(logSeparator);
-// 			console.log(`The migration has completed.`)
-// 			console.log(logSeparator);
-// 		});
+	// createContentType(environment);
+	createContentfulEntries(environment, promises)
+		.then((result) => {
+			console.log(logSeparator);
+			console.log(`Done!`);
+			console.log(logSeparator);
+			console.log(`The migration has completed.`)
+			console.log(logSeparator);
+		});
 }
 /**
  * Migration Content Type
  */
-const fieldContentType = [
-	{
-		id: 'postTitle',
-		name: 'Post Title',
-		required: true,
-		localized: false,
-		type: 'Text',
-		disabled: false,
-		omitted: false
-	},
-	{
-		id: 'slug',
-		name: 'Slug',
-		required: true,
-		localized: false,
-		type: 'Text',
-		disabled: false,
-		omitted: false
-	},
-	{
-		id: 'content',
-		name: 'Content',
-		required: true,
-		localized: false,
-		type: 'Symbol',
-		disabled: false,
-		omitted: false
-	},
-	{
-		id: "publishDate",
-		name: "Publish Date",
-		type: "Date",
-		localized: false,
-		required: true,
-		validations: [],
-		disabled: false,
-		omitted: false
-	},
-	{
-		id: "tags",
-		type: "Array",
-		items: { "type": "Symbol" }
-	}
-]
+// const fieldContentType = [
+// 	{
+// 		id: 'postTitle',
+// 		name: 'Post Title',
+// 		required: true,
+// 		localized: false,
+// 		type: 'Text',
+// 		disabled: false,
+// 		omitted: false
+// 	},
+// 	{
+// 		id: 'slug',
+// 		name: 'Slug',
+// 		required: true,
+// 		localized: false,
+// 		type: 'Text',
+// 		disabled: false,
+// 		omitted: false
+// 	},
+// 	{
+// 		id: 'content',
+// 		name: 'Content',
+// 		required: true,
+// 		localized: false,
+// 		type: 'Symbol',
+// 		disabled: false,
+// 		omitted: false
+// 	},
+// 	{
+// 		id: "publishDate",
+// 		name: "Publish Date",
+// 		type: "Date",
+// 		localized: false,
+// 		required: true,
+// 		validations: [],
+// 		disabled: false,
+// 		omitted: false
+// 	},
+// 	{
+// 		id: "tags",
+// 		type: "Array",
+// 		items: { "type": "Symbol" }
+// 	}
+// ]
 
 /**
  * 
  * @param {String} environment - Name of Contentful Environment.
  *
  */
-function createContentType(environment) {
-	let contentType = environment.createContentTypeWithId('blogPost', {
-		name: 'Blog Post',
-		displayField: 'title',
-		fields: fieldContentType
-	})
-	.then((contentType) => {
-		contentType.publish()
-        .then(contentType => {
-            console.log(contentType)
-            // createContentfulEntries(environment)
-        })
-	})
-	// .then((contentType) => console.log(contentType))
-	.catch(console.error)
-}
-
-function createContentfulEntries(environment) {
-	environment.createEntry('blogPost', {
-		fields: {
-			title: {
-				'en-US': 'Entry title'
-			}
-    	}
-	})
-	.then((entry) => entry.publish())
-	.then((entry) => console.log(entry))
-	.catch(console.error)
-}
+// function createContentType(environment) {
+// 	let contentType = environment.createContentTypeWithId('blogPost', {
+// 		name: 'Blog Post',
+// 		displayField: 'title',
+// 		fields: fieldContentType
+// 	})
+// 	.then((contentType) => {
+// 		contentType.publish()
+//         .then(contentType => {
+//             console.log(contentType)
+//             // createContentfulEntries(environment)
+//         })
+// 	})
+// 	// .then((contentType) => console.log(contentType))
+// 	.catch(console.error)
+// }
 
 /**
  * For each post data tree, publish a Contentful entry.
  * @param {String} environment - Name of Contentful Environment.
  * @param {Array} promises - data trees for Contentful posts.
  */
-// function createContentfulEntries(environment, promises) {
-// 	return Promise.all(promises.map((post, index) => new Promise(async resolve => {
+function createContentfulEntries(environment, promises) {
+	return Promise.all(promises.map((post, index) => new Promise(async resolve => {
 
-// 		let newPost;
-// 		console.log(`Attempting: ${post.slug['en-US']}`)
-// 		// console.log('postsssss--------------slug', post.slug);
-// 		// console.log('postsssss--------------featuredImage', post.featuredImage);
-// 		// console.log('postsssss--------------categories', post.categories);
-// 		// console.log('postsssss', post);
-// 		setTimeout(() => {
-// 			try {
-// 				newPost = environment.createEntry('blogPost', {
-// 					// fields: post
-// 					fields: {
-// 						title: {
-// 							'en-US': 'Entry title'
-// 						}
-// 					}
-// 				})
-// 				.then((entry) => entry.publish())
-// 				.then((entry) => {
-// 					console.log(`Success: ${entry.fields.slug['en-US']}`)
-// 				})
-// 			} catch (error) {
-// 				throw(Error(error))
-// 			}
+		let newPost;
+		console.log(`Attempting: ${post.slug['en-US']}`)
+		console.log('postsssss', post);
+		setTimeout(() => {
+			try {
+				newPost = environment.createEntry('blogPost', {
+					fields: post
+				})
+				.then((entry) => entry.publish())
+				.then((entry) => {
+					console.log(`Success: ${entry.fields.slug['en-US']}`)
+				})
+			} catch (error) {
+				throw(Error(error))
+			}
 
-// 			resolve(newPost)
-// 		}, 1000 + (5000 * index));
-// 	})));
-// }
+			resolve(newPost)
+		}, 1000 + (5000 * index));
+	})));
+}
 
 /**
  * Convert WordPress content to Contentful Rich Text
