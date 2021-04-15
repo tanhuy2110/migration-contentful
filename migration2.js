@@ -140,19 +140,17 @@ const fieldContentTypeBlogPost = [
     {
         id: "categories",
         name: "Categories",
-        type: "Link",
+        type: "Array",
         localized: false,
         required: true,
-        validations: [
-            {
-                linkContentType: [
-                    "category"
-                ]
-            }
-        ],
+        validations: [],
         disabled: false,
         omitted: false,
-        linkType: "Entry"
+        items: {
+            type: "Link",
+            validations: [],
+            linkType: "Entry"
+        }
     },
 ]
 
@@ -202,7 +200,7 @@ client.getSpace('s1rw45l2y55r')
 //         }
 //     }
 // }))
-// .then((entry) => entry.publish())
+// .then((entry) => entry.publish()Entry)
 // .then((entry) => console.log(entry))
 // .catch(console.error)
 

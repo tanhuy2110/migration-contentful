@@ -479,14 +479,26 @@ function createContentfulPosts(environment, assets) {
 			}
 
 			if (postKey === 'categories') {
-				postFields.categories = {
-					'en-US': {
-						sys: {
-							type: 'Link',
-							linkType: 'Entry',
-							id: 'blogging'
-						}
-					}
+				postFields.categories = 
+				// {
+					// 'en-US': {
+					// 	sys: {
+					// 		type: 'Link',
+					// 		linkType: 'Entry',
+					// 		id: 'blogging'
+					// 	}, 
+					// 	sys: {
+					// 		type: 'Link',
+					// 		linkType: 'Entry',
+					// 		id: 'content-marketing'
+					// 	}
+					// }
+				// }
+				{
+					'en-US' :[
+						{sys: {type: "Link", linkType: "Entry", id: "blogging"}},
+						{sys: {type: "Link", linkType: "Entry", id: "content-marketing"}}
+					]
 				}
 			}
 		}
